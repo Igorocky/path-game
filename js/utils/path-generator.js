@@ -3,8 +3,8 @@
 const EMPTY_CELL = 0
 const START_CELL = 1
 const WALL_CELL = 2
-const PATH_CELL = 3
-const TARGET_CELL = 4
+const TARGET_CELL = 3
+const PATH_CELL = 9
 
 function findStart({field}) {
     for (let x = 0; x < field.length; x++) {
@@ -120,6 +120,14 @@ function generatePath({width,height,length,numOfRandomWalls}) {
             removeAtIdx(emptyCells,idx)
             field[rndEmptyCell.x][rndEmptyCell.y] = WALL_CELL
             numOfRandomWalls--
+        }
+    }
+
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            if (field[x][y] === PATH_CELL) {
+                field[x][y] = EMPTY_CELL
+            }
         }
     }
 
