@@ -9,7 +9,7 @@ const TARGET_CELL = 4
 function findStart({field}) {
     for (let x = 0; x < field.length; x++) {
         for (let y = 0; y < field[0].length; y++) {
-            if (field[x][y] == START_CELL) {
+            if (field[x][y] === START_CELL) {
                 return {x,y}
             }
         }
@@ -23,7 +23,7 @@ function getPossibleEndPoints({field,x,y,d}) {
     x = x + d.dx
     y = y + d.dy
     while (0 < x && x < maxX && 0 < y && y < maxY && field[x][y] != WALL_CELL) {
-        if (field[x][y] == PATH_CELL && result.length) {
+        if (field[x][y] === PATH_CELL && result.length) {
             result.pop()
         }
         result.push({x,y})

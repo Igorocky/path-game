@@ -10,29 +10,12 @@ const PathBuilder = () => {
     const [state, setState] = useState(() => createNewState({}))
 
     function createNewState({prevState, params}) {
+        const {field,path} = generatePath({width:20,height:15,length:7})
+        console.log({field})
+        console.log({path})
         return createObj({
-            [s.FIELD_DESCRIPTION]: [
-                [2,0,0,0,0,0,0,0,0,0,0,2],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,4,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,2,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,1,0,0],
-                [0,0,0,0,0,0,0,0,0,2,0,0],
-                [2,0,0,0,0,0,0,0,0,0,0,2],
-            ],
-        [s.PATH_DESCRIPTION]: [
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0],
-            ],
+            [s.FIELD_DESCRIPTION]: field,
+            [s.PATH_DESCRIPTION]: path,
         })
     }
 
@@ -40,10 +23,12 @@ const PathBuilder = () => {
     const background = SVG.rect({key:'background', x:-1000, y:-1000, width:2000, height:2000, fill:"lightgrey"})
 
     const cellSize = 10
-    const numOfCols = state[s.FIELD_DESCRIPTION][0].length
-    const numOfRows = state[s.FIELD_DESCRIPTION].length
+    const maxY = state[s.FIELD_DESCRIPTION][0].length-1
+    const maxX = state[s.FIELD_DESCRIPTION].length-1
+    const numOfColumns = maxX + 1
+    const numOfRows = maxY + 1
 
-    const fieldLowerBound = SVG_EX.scale(numOfCols*cellSize)
+    const fieldLowerBound = SVG_EX.scale(numOfColumns*cellSize)
     const fieldUpperBound = fieldLowerBound.translateTo(SVG_EY.scale(numOfRows*cellSize).end)
     const fieldCorners = [
         fieldLowerBound.start,
@@ -55,15 +40,14 @@ const PathBuilder = () => {
     const viewBoundaries = SvgBoundaries.fromPoints(fieldCorners).addAbsoluteMargin(cellSize*0.3)
 
     function renderCells() {
-        console.log({numOfRows})
         const height = cellSize*numOfRows
-        const width = cellSize*numOfCols
+        const width = cellSize*numOfColumns
         const vertLine = SVG_EY.scale(height)
         const horLine = SVG_EX.scale(width)
         const lineWidth = cellSize * 0.05
         const lineColor = 'grey'
         return [
-            ...ints(0,numOfCols)
+            ...ints(0,numOfColumns)
                 .map(i => vertLine.translateTo(SVG_EX.scale(i*cellSize).end))
                 .map((vec,i) => vec.toSvgLine({
                     key:`vert-line-${i}`, props:{stroke: lineColor, strokeWidth: lineWidth}
@@ -76,40 +60,82 @@ const PathBuilder = () => {
         ]
     }
 
+    function fieldXToSvg(x) {
+        return (maxX-x)*cellSize+cellSize/2
+    }
+
+    function fieldYToSvg(y) {
+        return -(y*cellSize+cellSize/2)
+    }
+
     function renderObjects() {
         const result = []
-        for (let r = 0; r < numOfRows; r++) {
-            for (let c = 0; c < numOfCols; c++) {
-                const cellValue = state[s.FIELD_DESCRIPTION][numOfRows-1-r][c]
-                if (cellValue == START_CELL) {
+        for (let x = 0; x <= maxX; x++) {
+            for (let y = 0; y <= maxY; y++) {
+                const cellValue = state[s.FIELD_DESCRIPTION][x][y]
+                if (cellValue === START_CELL) {
                     result.push(svgCircle({
-                        key:`start-${r}-${c}`,
-                        c:SVG_EX.scale(c*cellSize+cellSize/2).add(SVG_EY.scale(r*cellSize+cellSize/2)).end,
+                        key:`start-${x}-${y}`,
+                        c:new Point(fieldXToSvg(x), fieldYToSvg(y)),
                         r:cellSize*0.35,
                         props:{strokeWidth: 0, fill: 'yellow'}
                     }))
-                } else if (cellValue == WALL_CELL) {
-                    result.push(renderFilledCell({key:`wall-${r}-${c}`, rowNum:r, colNum:c, color:'blue'}))
-                } else if (cellValue == TARGET_CELL) {
-                    result.push(renderFilledCell({key:`wall-${r}-${c}`, rowNum:r, colNum:c, color:'black'}))
+                } else if (cellValue === WALL_CELL) {
+                    result.push(renderFilledCell({key:`wall-${x}-${y}`, x, y, color:'blue'}))
+                } else if (cellValue === TARGET_CELL) {
+                    result.push(renderFilledCell({key:`target-${x}-${y}`, x, y, color:'black'}))
                 }
             }
         }
         return result
     }
 
-    function renderFilledCell({key,rowNum,colNum,color}) {
+    function renderFilledCell({key,x,y,color}) {
         let cellBottomVector = SVG_EX.scale(cellSize)
-        cellBottomVector = cellBottomVector.translate(null, colNum)
+        cellBottomVector = cellBottomVector.translate(null, maxX-x)
         let cellLeftVector = cellBottomVector.rotate(90)
-        cellBottomVector = cellBottomVector.translate(cellLeftVector,rowNum)
-        cellLeftVector = cellLeftVector.translate(null, rowNum+1)
+        cellBottomVector = cellBottomVector.translate(cellLeftVector,y)
+        cellLeftVector = cellLeftVector.translate(null, y+1)
         let cellUpperVector = cellLeftVector.rotate(-90)
         return svgPolygon({
             key,
             points:[cellBottomVector.start, cellBottomVector.end, cellUpperVector.end, cellUpperVector.start],
             props:{strokeWidth: 0, fill: color}
         })
+    }
+
+    function renderPath() {
+        const result = []
+        for (let p = 0; p < state[s.PATH_DESCRIPTION].length; p++) {
+            const pathElem = state[s.PATH_DESCRIPTION][p]
+            result.push(svgLine({
+                key:`path-${p}`,
+                from: new Point(fieldXToSvg(pathElem[0].x), fieldYToSvg(pathElem[0].y)),
+                to: new Point(fieldXToSvg(pathElem[1].x), fieldYToSvg(pathElem[1].y)),
+                props:{stroke: 'red', strokeWidth: cellSize*0.2}
+            }))
+        }
+        return result
+    }
+
+    function renderNumbers() {
+        const result = []
+        for (let x = 0; x <= maxX; x++) {
+            for (let y = 0; y <= maxY; y++) {
+                const cellValue = state[s.FIELD_DESCRIPTION][x][y]
+                result.push(SVG.text(
+                    {
+                        key:`cell-value-${x}-${y}`,
+                        x:fieldXToSvg(x)-cellSize*0.15,
+                        y:fieldYToSvg(y)+cellSize*0.2,
+                        fill:'orange',
+                        fontSize:(cellSize*0.5)+'px',
+                    },
+                    cellValue
+                ))
+            }
+        }
+        return result
     }
 
     return RE.Container.col.top.center({style:{marginTop:'100px'}},{},
@@ -121,8 +147,10 @@ const PathBuilder = () => {
             },
             background,
             svgPolygon({key: 'field', points: fieldCorners, props: {fill:'green', strokeWidth: 0}}),
+            renderObjects(),
             renderCells(),
-            renderObjects()
+            renderPath(),
+            renderNumbers()
         )
     )
 }
