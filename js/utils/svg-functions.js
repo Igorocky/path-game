@@ -15,14 +15,6 @@ class SvgBoundaries {
     static fromPoints(points) {
         if (points.length < 2) {
             throw new Error('points.length < 2')
-        } else if (points.length == 2) {
-            const point = points[0]
-            return new SvgBoundaries(
-                Math.min(x, x),Math.min(x, x),Math.min(x, x),Math.min(x, x),
-                Math.max(point.x, point.x),
-                Math.min(point.y, point.y),
-                Math.max(this.start.y, this.end.y),
-            )
         } else {
             let res = [points[0].x, points[0].x, points[0].y, points[0].y]
             for (let i = 1; i < points.length; i++) {
@@ -84,17 +76,6 @@ class Point {
      */
     scale(factor) {
         return new Point(this.x*factor, this.y*factor)
-    }
-
-    /**
-     * Returns a new point obtained by moving this point in 'dir' direction 'dist' times.
-     * @param {Point} dir
-     * @param {number} dist
-     * @returns {Point}
-     */
-    move(dir, dist) {
-        dist = dist??1
-        return new Point(this.x + dir.x*dist, this.y + dir.y*dist)
     }
 
     /**
@@ -200,16 +181,11 @@ class Vector {
      * @return {SvgBoundaries} SvgBoundaries
      */
     boundaries() {
-        return new SvgBoundaries(
-            Math.min(this.start.x, this.end.x),
-            Math.max(this.start.x, this.end.x),
-            Math.min(this.start.y, this.end.y),
-            Math.max(this.start.y, this.end.y),
-        )
+        return SvgBoundaries.fromPoints(this.start, this.end)
     }
 
-    toSvgLine(props) {
-        return svgLine({from:this.start, to:this.end, props})
+    toSvgLine({key,props}) {
+        return svgLine({key, from:this.start, to:this.end, props})
     }
 }
 
@@ -234,12 +210,13 @@ function mergeSvgBoundaries(boundariesList) {
 
 /**
  * Returns SVG line object.
+ * @param {string} key
  * @param {Point} from
  * @param {Point} to
  * @param {Object} props
  */
-function svgLine({from, to, props}) {
-    return SVG.line({x1:from.x, y1:from.y, x2:to.x, y2:to.y, ...(props??{})})
+function svgLine({key, from, to, props}) {
+    return SVG.line({key, x1:from.x, y1:from.y, x2:to.x, y2:to.y, ...(props??{})})
 }
 
 /**
@@ -249,8 +226,7 @@ function svgLine({from, to, props}) {
  * @param {Object} props
  */
 function svgCircle({key, c, r, props}) {
-    props = props??{}
-    return SVG.circle({key, cx:c.x, cy:c.y, r, ...props})
+    return SVG.circle({key, cx:c.x, cy:c.y, r, ...(props??{})})
 }
 
 /**
@@ -260,8 +236,7 @@ function svgCircle({key, c, r, props}) {
  * @return {*}
  */
 function svgPolygon({key, points, props}) {
-    props = props??{}
-    return SVG.polygon({key, points: points.flatMap(point => [point.x, point.y]).join(' '), ...props})
+    return SVG.polygon({key, points: points.flatMap(point => [point.x, point.y]).join(' '), ...(props??{})})
 }
 
 //tests
@@ -285,35 +260,10 @@ function assertNumbersEqual(expected, actual, precision) {
 }
 
 const TESTS = [
-    'testPointMove',
     'testVectorRotate',
     'testVectorScale',
     'testVectorTranslate',
 ]
-
-function testPointMove() {
-    const origin = new Point(0,0)
-    const ex = new Point(1,0)
-    const ey = new Point(0,-1)
-
-    const z = origin.move(ex)
-    assertEquals(1, z.x)
-    assertEquals(0, z.y)
-
-    const a = origin.move(ex, 5)
-    assertEquals(5, a.x)
-    assertEquals(0, a.y)
-
-    const b = origin.move(ey, 4)
-    assertEquals(0, b.x)
-    assertEquals(-4, b.y)
-
-    const distC = 7
-    const c = origin.move(ex.rotate(45), distC)
-    assertTrue(c.x > 0)
-    assertTrue(c.y < 0)
-    assertNumbersEqual(distC, (c.x**2+c.y**2)**0.5)
-}
 
 function testVectorRotate() {
     const v1 = new Vector(new Point(0,0), new Point(5,0))
