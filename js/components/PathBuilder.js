@@ -105,18 +105,12 @@ const PathBuilder = () => {
     }
 
     function renderPath() {
-        const result = []
-        for (let p = 0; p < state[s.PATH_DESCRIPTION].length; p++) {
-            const pathElem = state[s.PATH_DESCRIPTION][p]
-            const strokeWidth = cellSize*0.1;
-            result.push(svgLine({
-                key:`path-${p}`,
-                from: new Point(fieldXToSvg(pathElem[0].x), fieldYToSvg(pathElem[0].y)),
-                to: new Point(fieldXToSvg(pathElem[1].x), fieldYToSvg(pathElem[1].y)),
-                props:{stroke: 'black', strokeWidth: strokeWidth}
-            }))
-        }
-        return result
+        const strokeWidth = cellSize*0.1;
+        return svgPolyline({
+            key:'path',
+            points:state[s.PATH_DESCRIPTION].map(({x,y}) => new Point(fieldXToSvg(x),fieldYToSvg(y))),
+            props:{fill:'none', stroke: 'black', strokeWidth: strokeWidth, strokeLinecap:'round', strokeLinejoin:'round'}
+        })
     }
 
     function renderNumbers() {

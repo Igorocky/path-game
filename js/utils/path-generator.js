@@ -65,9 +65,9 @@ function generatePath({width,height,length,numOfRandomWalls}) {
 
     function init() {
         field = initField({width,height})
-        path = []
         curX = startX
         curY = startY
+        path = [{x:curX,y:curY}]
         curLength = length
         curMainDir = randomInt(0,1)
     }
@@ -91,7 +91,7 @@ function generatePath({width,height,length,numOfRandomWalls}) {
         } else {
             const endPoint = possibleEndPoints[randomInt(0,possibleEndPoints.length-1)]
             renderRay({field,start:{x:curX,y:curY},end:{x:endPoint.x,y:endPoint.y},d:curDir})
-            path.push([{x:curX,y:curY},{x:endPoint.x,y:endPoint.y}])
+            path.push({x:endPoint.x,y:endPoint.y})
             curMainDir = Math.abs(curMainDir-1)
             curX = endPoint.x
             curY = endPoint.y
@@ -102,7 +102,7 @@ function generatePath({width,height,length,numOfRandomWalls}) {
         }
     }
     const lastPathElem = path[path.length-1]
-    field[lastPathElem[1].x][lastPathElem[1].y] = TARGET_CELL
+    field[lastPathElem.x][lastPathElem.y] = TARGET_CELL
     field[startX][startY] = START_CELL
 
     if (numOfRandomWalls) {

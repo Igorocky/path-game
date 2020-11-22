@@ -220,6 +220,16 @@ function svgLine({key, from, to, props}) {
 }
 
 /**
+ * Returns SVG line object.
+ * @param {string} key
+ * @param {Point[]} points
+ * @param {Object} props
+ */
+function svgPolyline({key, points, props}) {
+    return SVG.polyline({key, points:points.flatMap(point => [point.x, point.y]).join(' '), ...(props??{})})
+}
+
+/**
  * @param {string} key
  * @param {Point} c
  * @param {number} r

@@ -131,6 +131,7 @@ const RE = {
 
 const SVG = {
     line: reFactory('line'),
+    polyline: reFactory('polyline'),
     rect: reFactory('rect'),
     circle: reFactory('circle'),
     image: reFactory('image'),
