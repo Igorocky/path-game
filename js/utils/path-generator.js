@@ -47,7 +47,7 @@ function initField({width,height}) {
     return ints(0,width-1).map(x => ints(0,height-1).map(y=>EMPTY_CELL))
 }
 
-function generatePath({width,height,length}) {
+function generatePath({width,height,length,numOfRandomWalls}) {
     const dirs = [
         [{dx:1,dy:0},{dx:-1,dy:0}],
         [{dx:0,dy:1},{dx:0,dy:-1}],
@@ -104,6 +104,24 @@ function generatePath({width,height,length}) {
     const lastPathElem = path[path.length-1]
     field[lastPathElem[1].x][lastPathElem[1].y] = TARGET_CELL
     field[startX][startY] = START_CELL
+
+    if (numOfRandomWalls) {
+        let emptyCells = []
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                if (field[x][y] === EMPTY_CELL) {
+                    emptyCells.push({x,y})
+                }
+            }
+        }
+        while (numOfRandomWalls > 0 && emptyCells.length > 0) {
+            const idx = randomInt(0,emptyCells.length-1);
+            const rndEmptyCell = emptyCells[idx]
+            removeAtIdx(emptyCells,idx)
+            field[rndEmptyCell.x][rndEmptyCell.y] = WALL_CELL
+            numOfRandomWalls--
+        }
+    }
 
     return {field,path}
 }

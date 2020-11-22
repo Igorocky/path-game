@@ -10,7 +10,7 @@ const PathBuilder = () => {
     const [state, setState] = useState(() => createNewState({}))
 
     function createNewState({prevState, params}) {
-        const {field,path} = generatePath({width:20,height:15,length:7})
+        const {field,path} = generatePath({width:20,height:15,length:7,numOfRandomWalls:10})
         console.log({field})
         console.log({path})
         return createObj({

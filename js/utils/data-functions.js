@@ -67,6 +67,10 @@ function modifyAtIdx(arr, idx, modifier) {
     return arr.map((e,i) => i==idx?modifier(e):e)
 }
 
+function removeAtIdx(arr, idx) {
+    return arr.filter((e,i) => i!=idx)
+}
+
 function nextRandomElem({allElems,counts}) {
     const elemsWithCnt = allElems.map(elem => ({...elem, cnt:counts[elem.idx]}))
     const minCnt = elemsWithCnt.attr('cnt').min()
