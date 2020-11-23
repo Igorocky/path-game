@@ -47,12 +47,15 @@ function initField({width,height}) {
 }
 
 function generatePath({width,height,length,numOfRandomWalls}) {
+    if (width < 5 || height < 5) {
+        throw new Error('width < 5 || height < 5')
+    }
     const dirs = [
         [{dx:1,dy:0},{dx:-1,dy:0}],
         [{dx:0,dy:1},{dx:0,dy:-1}],
     ]
-    const startX = Math.floor(width/2)
-    const startY = Math.floor(height/2)
+    const startX = randomInt(2,width-3)
+    const startY = randomInt(2,height-3)
 
     let field
     let path
