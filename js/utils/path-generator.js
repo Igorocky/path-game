@@ -4,17 +4,8 @@ const EMPTY_CELL = 0
 const START_CELL = 1
 const WALL_CELL = 2
 const TARGET_CELL = 3
-const PATH_CELL = 9
-
-function findStart({field}) {
-    for (let x = 0; x < field.length; x++) {
-        for (let y = 0; y < field[0].length; y++) {
-            if (field[x][y] === START_CELL) {
-                return {x,y}
-            }
-        }
-    }
-}
+const PATH_CELL = 8
+const SUB_TARGET_CELL = 9
 
 function getPossibleEndPoints({field,x,y,d}) {
     const maxX = field.length - 1
@@ -22,13 +13,19 @@ function getPossibleEndPoints({field,x,y,d}) {
     const result = []
     x = x + d.dx
     y = y + d.dy
-    while (0 < x && x < maxX && 0 < y && y < maxY && field[x][y] != WALL_CELL) {
-        if (field[x][y] === PATH_CELL && result.length) {
+    while (0 < x && x < maxX && 0 < y && y < maxY
+            && field[x][y] !== WALL_CELL && field[x][y] !== SUB_TARGET_CELL && field[x][y] !== START_CELL) {
+        if ((field[x][y] === PATH_CELL || field[x][y] === SUB_TARGET_CELL) && result.length) {
             result.pop()
         }
-        result.push({x,y})
+        if (field[x][y] !== PATH_CELL) {
+            result.push({x,y})
+        }
         x = x + d.dx
         y = y + d.dy
+    }
+    if ((field[x][y] === START_CELL || field[x][y] === SUB_TARGET_CELL) && result.length) {
+        result.pop()
     }
     return result
 }
@@ -37,7 +34,9 @@ function renderRay({field,start,end,d}) {
     let x = start.x
     let y = start.y
     while (x != end.x || y != end.y) {
-        field[x][y] = PATH_CELL
+        if (field[x][y] === EMPTY_CELL) {
+            field[x][y] = PATH_CELL
+        }
         x = x + d.dx
         y = y + d.dy
     }
@@ -64,9 +63,10 @@ function generatePath({width,height,length,numOfRandomWalls}) {
     let numOfTries = 0
 
     function init() {
-        field = initField({width,height})
         curX = startX
         curY = startY
+        field = initField({width,height})
+        field[startX][startY] = START_CELL
         path = [{x:curX,y:curY}]
         curLength = length
         curMainDir = randomInt(0,1)
@@ -91,6 +91,7 @@ function generatePath({width,height,length,numOfRandomWalls}) {
         } else {
             const endPoint = possibleEndPoints[randomInt(0,possibleEndPoints.length-1)]
             renderRay({field,start:{x:curX,y:curY},end:{x:endPoint.x,y:endPoint.y},d:curDir})
+            field[endPoint.x][endPoint.y] = SUB_TARGET_CELL
             path.push({x:endPoint.x,y:endPoint.y})
             curMainDir = Math.abs(curMainDir-1)
             curX = endPoint.x
@@ -103,7 +104,6 @@ function generatePath({width,height,length,numOfRandomWalls}) {
     }
     const lastPathElem = path[path.length-1]
     field[lastPathElem.x][lastPathElem.y] = TARGET_CELL
-    field[startX][startY] = START_CELL
 
     if (numOfRandomWalls) {
         let emptyCells = []
@@ -125,7 +125,7 @@ function generatePath({width,height,length,numOfRandomWalls}) {
 
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
-            if (field[x][y] === PATH_CELL) {
+            if (field[x][y] === PATH_CELL || field[x][y] === SUB_TARGET_CELL) {
                 field[x][y] = EMPTY_CELL
             }
         }

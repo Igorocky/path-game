@@ -19,7 +19,7 @@ const PathBuilder = () => {
         })
     }
 
-    const viewWidthPx = 700
+    const viewWidthPx = 900
     const background = SVG.rect({key:'background', x:-1000, y:-1000, width:2000, height:2000, fill:'white'})
 
     const cellSize = 10
@@ -126,7 +126,7 @@ const PathBuilder = () => {
                         key:`cell-value-${x}-${y}`,
                         x:fieldXToSvg(x)- dx,
                         y:fieldYToSvg(y)+ dy,
-                        fill:'coral',
+                        fill:'lightgrey',
                         fontSize: fontSize,
                     },
                     cellValue
@@ -136,7 +136,7 @@ const PathBuilder = () => {
         return result
     }
 
-    return RE.Container.col.top.center({style:{marginTop:'100px'}},{},
+    return RE.Container.col.top.center({style:{marginTop:'10px'}},{},
         RE.svg(
             {
                 width: viewWidthPx,
