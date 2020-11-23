@@ -120,7 +120,7 @@ function generatePath({width,height,length,numOfRandomWalls}) {
         while (numOfRandomWalls > 0 && emptyCells.length > 0) {
             const idx = randomInt(0,emptyCells.length-1);
             const rndEmptyCell = emptyCells[idx]
-            removeAtIdx(emptyCells,idx)
+            emptyCells = removeAtIdx(emptyCells,idx)
             field[rndEmptyCell.x][rndEmptyCell.y] = WALL_CELL
             numOfRandomWalls--
         }
