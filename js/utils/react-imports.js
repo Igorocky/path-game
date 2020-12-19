@@ -15,6 +15,10 @@ function reFactory(elemType) {
 
 const MaterialUI = window['MaterialUI']
 const MuiColors = MaterialUI.colors
+const ThemeProvider = MaterialUI.ThemeProvider;
+const makeStyles = MaterialUI.makeStyles;
+const CssBaseline = MaterialUI.CssBaseline;
+const createMuiTheme = MaterialUI.createMuiTheme;
 
 const DIRECTION = {row: "row", column: "column",}
 const JUSTIFY = {flexStart: "flex-start", center: "center", flexEnd: "flex-end", spaceBetween: "space-between", spaceAround: "space-around",}
