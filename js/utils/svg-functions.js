@@ -9,10 +9,10 @@ class SvgBoundaries {
     }
 
     /**
-     * @param {Point[]} points
+     * @param {Point} points
      * @return {SvgBoundaries}
      */
-    static fromPoints(points) {
+    static fromPoints(...points) {
         if (points.length < 2) {
             throw new Error('points.length < 2')
         } else {
@@ -37,6 +37,33 @@ class SvgBoundaries {
             this.minY - margin,
             this.maxY + margin,
         )
+    }
+
+    /**
+     * @param {Point} points
+     */
+    addPoints(...points) {
+        return SvgBoundaries.fromPoints(
+            new Point(this.minX, this.minY),
+            new Point(this.maxX, this.maxY),
+            ...points
+        )
+    }
+
+    toRect({key,props,color,strokeWidth}) {
+        return svgPolygon({
+            key,
+            boundaries: this,
+            props: props?props:{fill:'none', stroke:color, strokeWidth: strokeWidth??1}
+        })
+    }
+
+    width() {
+        return this.maxX-this.minX
+    }
+
+    height() {
+        return this.maxY-this.minY
     }
 }
 
@@ -89,6 +116,14 @@ class Point {
             this.x*Math.cos(rad) - this.y*Math.sin(rad),
             this.x*Math.sin(rad) + this.y*Math.cos(rad)
         )
+    }
+
+    withX(xModifier) {
+        return new Point(xModifier(this.x), this.y)
+    }
+
+    withY(yModifier) {
+        return new Point(this.x, yModifier(this.y))
     }
 }
 
@@ -197,14 +232,14 @@ function degToRad(deg) {
 }
 
 /**
- * @param {SvgBoundaries[]} boundariesList
+ * @param {SvgBoundaries} boundariesList
  */
-function mergeSvgBoundaries(boundariesList) {
-    return boundariesList.reduce((prev, curr) => new SvgBoundaries(
-            Math.min(prev.minX, curr.minX),
-            Math.max(prev.maxX, curr.maxX),
-            Math.min(prev.minY, curr.minY),
-            Math.max(prev.maxY, curr.maxY),
+function mergeSvgBoundaries(...boundariesList) {
+    return boundariesList.reduce((prev, curr) => !hasValue(prev) ? curr : !hasValue(curr) ? prev : new SvgBoundaries(
+        Math.min(prev.minX, curr.minX),
+        Math.max(prev.maxX, curr.maxX),
+        Math.min(prev.minY, curr.minY),
+        Math.max(prev.maxY, curr.maxY),
     ))
 }
 
@@ -242,10 +277,19 @@ function svgCircle({key, c, r, props}) {
 /**
  * @param {string} key
  * @param {Point[]} points
+ * @param {SvgBoundaries} boundaries
  * @param {Object} props
  * @return {*}
  */
-function svgPolygon({key, points, props}) {
+function svgPolygon({key, points, boundaries, props}) {
+    if (boundaries) {
+        points = [
+            new Point(boundaries.minX,boundaries.minY),
+            new Point(boundaries.maxX,boundaries.minY),
+            new Point(boundaries.maxX,boundaries.maxY),
+            new Point(boundaries.minX,boundaries.maxY),
+        ]
+    }
     return SVG.polygon({key, points: points.flatMap(point => [point.x, point.y]).join(' '), ...(props??{})})
 }
 

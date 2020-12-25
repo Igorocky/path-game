@@ -37,7 +37,7 @@ const PathBuilder = () => {
         fieldUpperBound.start,
     ]
 
-    const viewBoundaries = SvgBoundaries.fromPoints(fieldCorners).addAbsoluteMargin(cellSize*0.3)
+    const viewBoundaries = SvgBoundaries.fromPoints(...fieldCorners).addAbsoluteMargin(cellSize*0.3)
 
     function renderCells() {
         const height = cellSize*numOfRows
