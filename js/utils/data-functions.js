@@ -4,6 +4,10 @@ function hasValue(variable) {
     return variable !== undefined && variable !== null
 }
 
+function hasNoValue(variable) {
+    return !hasValue(variable)
+}
+
 function isObject(obj) {
     return typeof obj === 'object' && !Array.isArray(obj)
 }
@@ -53,6 +57,10 @@ Array.prototype.attr = function(...attrs) {
 
 Array.prototype.first = function() {
     return this[0]
+}
+
+Array.prototype.last = function() {
+    return this[this.length-1]
 }
 
 Array.prototype.rest = function() {
