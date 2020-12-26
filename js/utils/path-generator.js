@@ -204,9 +204,12 @@ function generatePath({width,height,length,numOfRandomWalls}) {
     return {field,path}
 }
 
-function generatePath2({width,height,length}) {
+function generatePath2({width,height,length,numOfFakePaths}) {
     if (width < 5 || height < 5) {
         throw new Error('width < 5 || height < 5')
+    }
+    if (numOfFakePaths < 0 || length < numOfFakePaths) {
+        throw new Error('numOfFakePaths < 0 || length < numOfFakePaths')
     }
 
     const p = {
@@ -223,7 +226,6 @@ function generatePath2({width,height,length}) {
         FIELD: 'FIELD',
         START_X: 'START_X',
         START_Y: 'START_Y',
-        TARGET_LENGTHS: 'TARGET_LENGTHS',
         TARGETS: 'TARGETS',
         POSSIBLE_ENDPOINTS: 'POSSIBLE_ENDPOINTS',
     }
@@ -236,6 +238,9 @@ function generatePath2({width,height,length}) {
         // cnt++
         // console.log({cnt})
         // console.log({state})
+    }
+    if (state[s.PHASE] == p.FAILED) {
+        throw new Error('state[s.PHASE] == p.FAILED')
     }
 
     function getNextState(prevState) {
@@ -264,8 +269,12 @@ function generatePath2({width,height,length}) {
                 endY:prevState[s.TARGETS].last().y
             })
             if (shortestPathForLatestTarget.length-1 == length) {
-                nextStateHolder.set(s.PHASE, p.COMPLETED)
-                nextStateHolder.set(s.ID, stateId++)
+                if (prevState[s.TARGETS].length-1 < numOfFakePaths) {
+                    nextStateHolder.setObj(createStateWithNewFakeTarget({prevState}))
+                } else {
+                    nextStateHolder.set(s.PHASE, p.COMPLETED)
+                    nextStateHolder.set(s.ID, stateId++)
+                }
             } else {
                 nextStateHolder.set(s.POSSIBLE_ENDPOINTS, determinePossibleEndpoints({
                     field:prevState[s.FIELD], prevPath:shortestPathForLatestTarget
@@ -275,19 +284,43 @@ function generatePath2({width,height,length}) {
             }
         } else if (prevState[s.PHASE] == p.POSSIBLE_ENDPOINTS_FOUND) {
             if (prevState[s.POSSIBLE_ENDPOINTS].length == 0) {
-                console.log('prevState[s.POSSIBLE_ENDPOINTS].length == 0')
-                const pastStateToContinueFrom = findPastStateToContinueFrom({state:prevState})
-                console.log({pastStateToContinueFrom})
-                if (hasNoValue(pastStateToContinueFrom)) {
-                    nextStateHolder.set(s.PHASE, p.FAILED)
-                    nextStateHolder.set(s.ID, stateId++)
+                if (prevState[s.TARGETS].length == 1) {
+                    const pastStateToContinueFrom = findPastStateToContinueFrom({state:prevState})
+                    console.log({pastStateToContinueFrom})
+                    if (hasNoValue(pastStateToContinueFrom)) {
+                        nextStateHolder.set(s.PHASE, p.FAILED)
+                        nextStateHolder.set(s.ID, stateId++)
+                    } else {
+                        nextStateHolder.setObj(pastStateToContinueFrom)
+                    }
                 } else {
-                    nextStateHolder.setObj(pastStateToContinueFrom)
+                    if (prevState[s.TARGETS].length-1 < numOfFakePaths) {
+                        nextStateHolder.setObj(createStateWithNewFakeTarget({prevState}))
+                    } else {
+                        nextStateHolder.set(s.PHASE, p.COMPLETED)
+                        nextStateHolder.set(s.ID, stateId++)
+                    }
                 }
             } else {
                 nextStateHolder.setObj(applyRandomEndpoint({prevState,length}))
             }
         }
+        return nextStateHolder.get()
+    }
+
+    function createStateWithNewFakeTarget({prevState}) {
+        const prevTargets = prevState[s.TARGETS]
+        const shortestPathForMainTarget = findShortestPath({
+            field:prevState[s.FIELD],
+            startX:prevState[s.START_X],
+            startY:prevState[s.START_Y],
+            endX:prevTargets[0].x,
+            endY:prevTargets[0].y
+        })
+        const nextStateHolder = objectHolder(prevState)
+        nextStateHolder.set(s.TARGETS, [...prevTargets, shortestPathForMainTarget[prevTargets.length-1]])
+        nextStateHolder.set(s.PHASE, p.PATH_ELEM_ADDED)
+        nextStateHolder.set(s.ID, stateId++)
         return nextStateHolder.get()
     }
 
@@ -388,18 +421,19 @@ function generatePath2({width,height,length}) {
             }
         }
     }
-    for (const {x,y} of state[s.TARGETS]) {
-        finalField[x][y] = TARGET_CELL
-    }
+    const mainTarget = state[s.TARGETS][0]
+    finalField[mainTarget.x][mainTarget.y] = TARGET_CELL
 
     return {
         field: finalField,
-        path: findShortestPath({
-            field:finalField,
-            startX:state[s.START_X],
-            startY:state[s.START_Y],
-            endX:state[s.TARGETS].last().x,
-            endY:state[s.TARGETS].last().y,
-        }),
+        paths: state[s.TARGETS].map(target =>
+            findShortestPath({
+                field:finalField,
+                startX:state[s.START_X],
+                startY:state[s.START_Y],
+                endX:target.x,
+                endY:target.y,
+            })
+        ),
     }
 }

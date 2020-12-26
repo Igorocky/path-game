@@ -4,18 +4,18 @@ const PathBuilder = () => {
 
     const s = {
         FIELD_DESCRIPTION: 'FIELD_DESCRIPTION',
-        PATH_DESCRIPTION: 'PATH_DESCRIPTION',
+        PATHS: 'PATHS',
     }
 
     const [state, setState] = useState(() => createNewState({}))
 
     function createNewState({prevState, params}) {
-        const {field,path} = generatePath2({width:20,height:15,length:7,numOfRandomWalls:10})
+        const {field,paths} = generatePath2({width:20,height:15,length:7,numOfFakePaths:3})
         console.log({field})
-        console.log({path})
+        console.log({paths})
         return createObj({
             [s.FIELD_DESCRIPTION]: field,
-            [s.PATH_DESCRIPTION]: path,
+            [s.PATHS]: paths,
         })
     }
 
@@ -104,13 +104,23 @@ const PathBuilder = () => {
         })
     }
 
-    function renderPath() {
+    function renderPath({key,path,color}) {
         const strokeWidth = cellSize*0.1;
         return svgPolyline({
-            key:'path',
-            points:state[s.PATH_DESCRIPTION].map(({x,y}) => new Point(fieldXToSvg(x),fieldYToSvg(y))),
-            props:{fill:'none', stroke: 'black', strokeWidth: strokeWidth, strokeLinecap:'round', strokeLinejoin:'round'}
+            key,
+            points:path.map(({x,y}) => new Point(fieldXToSvg(x),fieldYToSvg(y))),
+            props:{fill:'none', stroke: color, strokeWidth: strokeWidth, strokeLinecap:'round', strokeLinejoin:'round'}
         })
+    }
+
+    function renderPaths() {
+        const paths = state[s.PATHS]
+        const result = []
+        for (let i = 1; i < paths.length; i++) {
+            result.push(renderPath({key:`fake-path-${i}`,path:paths[i],color:'pink'}))
+        }
+        result.push(renderPath({key:'main-path',path:paths[0],color:'black'}))
+        return result
     }
 
     function renderNumbers() {
@@ -145,9 +155,9 @@ const PathBuilder = () => {
             },
             background,
             svgPolygon({key: 'field', points: fieldCorners, props: {fill:'white', strokeWidth: 0}}),
-            renderObjects(),
             renderCells(),
-            renderPath(),
+            renderPaths(),
+            renderObjects(),
             // renderNumbers()
         )
     )
