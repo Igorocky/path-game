@@ -5,18 +5,36 @@ const PathBuilder = () => {
     const s = {
         FIELD_DESCRIPTION: 'FIELD_DESCRIPTION',
         PATHS: 'PATHS',
+        SHOW_PATHS: 'SHOW_PATHS',
     }
 
     const [state, setState] = useState(() => createNewState({}))
 
     function createNewState({prevState, params}) {
-        const {field,paths} = generatePath2({width:20,height:15,length:7,numOfFakePaths:3})
-        console.log({field})
-        console.log({paths})
+        function getParam(name,defValue) {
+            return params?.[name]??prevState?.[name]??defValue
+        }
+
+        let field = getParam(s.FIELD_DESCRIPTION)
+        let paths = getParam(s.PATHS)
+
+        if (hasNoValue(field)) {
+            const {field:newField,paths:newPaths} = generateNewField()
+            field = newField
+            paths = newPaths
+        }
         return createObj({
             [s.FIELD_DESCRIPTION]: field,
             [s.PATHS]: paths,
+            [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
         })
+    }
+
+    function generateNewField() {
+        const {field,paths} = generatePath2({width:20,height:15,length:7,numOfFakePaths:3})
+        console.log({field})
+        console.log({paths})
+        return {field,paths}
     }
 
     const viewWidthPx = 900
@@ -146,17 +164,59 @@ const PathBuilder = () => {
         return result
     }
 
+    function getWidthAndHeightOfSvg({viewBoundaries,viewWidthPx}) {
+        const viewBoundariesWidth = viewBoundaries.maxX - viewBoundaries.minX
+        const viewBoundariesHeight = viewBoundaries.maxY - viewBoundaries.minY
+        if (viewBoundariesWidth > viewBoundariesHeight) {
+            return {
+                width: viewWidthPx,
+                height: viewWidthPx * viewBoundariesHeight / viewBoundariesWidth
+            }
+        } else {
+            return {
+                width: viewWidthPx * viewBoundariesWidth / viewBoundariesHeight,
+                height: viewWidthPx
+            }
+        }
+    }
+
     return RE.Container.col.top.center({style:{marginTop:'10px'}},{},
+        RE.Container.row.center.center({},{style:{marginLeft:'20px'}},
+            RE.Button(
+                {
+                    onClick: () => setState(prevState => createNewState({
+                        prevState,
+                        params: {[s.SHOW_PATHS]:true}
+                    }))
+                },
+                'show path'
+            ),
+            RE.Button(
+                {
+                    onClick: () => {
+                        const {field,paths} = generateNewField()
+                        setState(prevState => createNewState({
+                            prevState,
+                            params: {
+                                [s.SHOW_PATHS]: false,
+                                [s.FIELD_DESCRIPTION]: field,
+                                [s.PATHS]: paths,
+                            }
+                        }))
+                    }
+                },
+                'generate new'
+            ),
+        ),
         RE.svg(
             {
-                width: viewWidthPx,
-                height: viewWidthPx,
+                ...getWidthAndHeightOfSvg({viewBoundaries,viewWidthPx}),
                 boundaries: viewBoundaries,
             },
             background,
             svgPolygon({key: 'field', points: fieldCorners, props: {fill:'white', strokeWidth: 0}}),
             renderCells(),
-            renderPaths(),
+            state[s.SHOW_PATHS] ? renderPaths() : null,
             renderObjects(),
             // renderNumbers()
         )
