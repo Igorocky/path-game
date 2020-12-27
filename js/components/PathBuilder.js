@@ -51,10 +51,7 @@ const PathBuilder = () => {
         //     console.log(i)
         // }
 
-        const {field,paths,history} = generatePath({width:20,height:15,length:10,numOfFakePaths:4})
-        console.log({field})
-        console.log({paths})
-        return {field,paths,history}
+        return generatePath({width:20,height:15,length:10,numOfFakePaths:4})
     }
 
     const viewWidthPx = 900
