@@ -27,6 +27,7 @@ const PathBuilder = () => {
             [s.FIELD_DESCRIPTION]: field,
             [s.PATHS]: paths,
             [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
+            // [s.SHOW_PATHS]: true,
         })
     }
 
@@ -134,8 +135,17 @@ const PathBuilder = () => {
     function renderPaths() {
         const paths = state[s.PATHS]
         const result = []
+        const fakePathColors = [
+            'rgba(255,0,0,0.3)',
+            'rgba(0,255,0,0.3)',
+            'rgba(0,0,255,0.3)',
+        ]
         for (let i = 1; i < paths.length; i++) {
-            result.push(renderPath({key:`fake-path-${i}`,path:paths[i],color:'pink'}))
+            result.push(renderPath({
+                key:`fake-path-${i}`,
+                path:paths[i],
+                color:i<=fakePathColors.length?fakePathColors[i-1]:fakePathColors[0]
+            }))
         }
         result.push(renderPath({key:'main-path',path:paths[0],color:'black'}))
         return result

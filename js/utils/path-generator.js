@@ -286,7 +286,6 @@ function generatePath2({width,height,length,numOfFakePaths}) {
             if (prevState[s.POSSIBLE_ENDPOINTS].length == 0) {
                 if (prevState[s.TARGETS].length == 1) {
                     const pastStateToContinueFrom = findPastStateToContinueFrom({state:prevState})
-                    console.log({pastStateToContinueFrom})
                     if (hasNoValue(pastStateToContinueFrom)) {
                         nextStateHolder.set(s.PHASE, p.FAILED)
                         nextStateHolder.set(s.ID, stateId++)
