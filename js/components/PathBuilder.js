@@ -32,7 +32,7 @@ const PathBuilder = () => {
     }
 
     function generateNewField() {
-        const {field,paths} = generatePath2({width:20,height:15,length:7,numOfFakePaths:3})
+        const {field,paths} = generatePath2({width:20,height:15,length:10,numOfFakePaths:3})
         console.log({field})
         console.log({paths})
         return {field,paths}
