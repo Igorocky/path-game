@@ -32,7 +32,7 @@ const PathBuilder = () => {
     }
 
     function generateNewField() {
-        const {field,paths} = generatePath2({width:20,height:15,length:10,numOfFakePaths:3})
+        const {field,paths} = generatePath({width:20,height:15,length:10,numOfFakePaths:3})
         console.log({field})
         console.log({paths})
         return {field,paths}
@@ -219,8 +219,6 @@ const PathBuilder = () => {
 
     return RE.Container.col.top.center({style:{marginTop:'10px'}},{},
         RE.Container.row.center.center({},{style:{marginLeft:'20px'}},
-            RE.Button({onClick: onShowPath}, 'show path'),
-            RE.Button({onClick: onGenerateNew}, 'generate new'),
             RE.Button({onClick: onNext}, 'next'),
         ),
         RE.svg(
