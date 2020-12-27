@@ -8,6 +8,7 @@ const PathBuilder = () => {
         HISTORY: 'HISTORY',
         CUR_VERSION: 'CUR_VERSION',
         SHOW_PATHS: 'SHOW_PATHS',
+        SHIFT_PATHS: 'SHIFT_PATHS',
     }
 
     const [state, setState] = useState(() => createNewState({}))
@@ -38,8 +39,8 @@ const PathBuilder = () => {
             [s.PATHS]: history[curVersion].paths,
             [s.HISTORY]: history,
             [s.CUR_VERSION]: curVersion,
-            // [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
-            [s.SHOW_PATHS]: true,
+            [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
+            [s.SHIFT_PATHS]: getParam(s.SHIFT_PATHS, false),
         })
     }
 
@@ -135,11 +136,11 @@ const PathBuilder = () => {
         })
     }
 
-    function renderPath({key,path,color}) {
+    function renderPath({key,path,color,dx}) {
         const strokeWidth = cellSize*0.1;
         return svgPolyline({
             key,
-            points:path.map(({x,y}) => new Point(fieldXToSvg(x),fieldYToSvg(y))),
+            points:path.map(({x,y}) => new Point(fieldXToSvg(x)+(dx??0),fieldYToSvg(y)+(dx??0))),
             props:{fill:'none', stroke: color, strokeWidth: strokeWidth, strokeLinecap:'round', strokeLinejoin:'round'}
         })
     }
@@ -156,7 +157,8 @@ const PathBuilder = () => {
             result.push(renderPath({
                 key:`fake-path-${i}`,
                 path:paths[i],
-                color:i<=fakePathColors.length?fakePathColors[i-1]:fakePathColors[0]
+                color:i<=fakePathColors.length?fakePathColors[i-1]:fakePathColors[0],
+                dx:state[s.SHIFT_PATHS]?i:0
             }))
         }
         result.push(renderPath({key:'main-path',path:paths[0],color:'black'}))
@@ -186,6 +188,10 @@ const PathBuilder = () => {
         return result
     }
 
+    function renderPathInfo() {
+        return state[s.PATHS].map((path,idx) => RE.div({key:`path-info-${idx}`},`path ${idx}: length = ${path.length}`))
+    }
+
     function getWidthAndHeightOfSvg({viewBoundaries,viewWidthPx}) {
         const viewBoundariesWidth = viewBoundaries.maxX - viewBoundaries.minX
         const viewBoundariesHeight = viewBoundaries.maxY - viewBoundaries.minY
@@ -213,7 +219,7 @@ const PathBuilder = () => {
         setState(prevState => createNewState({
             prevState,
             params: {
-                [s.SHOW_PATHS]: false,
+                // [s.SHOW_PATHS]: false,
                 [s.HISTORY]: null
             }
         }))
@@ -227,8 +233,22 @@ const PathBuilder = () => {
         }
     }
 
-    return RE.Container.col.top.left({style:{marginTop:'10px'}},{},
+    return RE.Container.col.top.left({style:{marginTop:'10px'}},{style:{marginBottom:'5px'}},
         RE.Container.row.left.center({},{style:{marginLeft:'20px'}},
+            RE.FormControlLabel({
+                control:RE.Checkbox({
+                    checked: state[s.SHOW_PATHS],
+                    onChange: event => setState(prevState => createNewState({prevState,params:{[s.SHOW_PATHS]:event.target.checked}}))
+                }),
+                label:'Show paths'
+            }),
+            RE.FormControlLabel({
+                control:RE.Checkbox({
+                    checked: state[s.SHIFT_PATHS],
+                    onChange: event => setState(prevState => createNewState({prevState,params:{[s.SHIFT_PATHS]:event.target.checked}}))
+                }),
+                label:'Apply shift'
+            }),
             RE.Button({onClick: onNext}, 'next'),
             re(Pagination,{
                 numOfPages:state[s.HISTORY].length,
@@ -236,6 +256,7 @@ const PathBuilder = () => {
                 onChange: newPage => setState(prevState => createNewState({prevState,params:{[s.CUR_VERSION]:newPage-1}}))
             })
         ),
+        renderPathInfo(),
         RE.svg(
             {
                 ...getWidthAndHeightOfSvg({viewBoundaries,viewWidthPx}),
