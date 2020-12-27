@@ -190,33 +190,38 @@ const PathBuilder = () => {
         }
     }
 
+    function onShowPath() {
+        setState(prevState => createNewState({
+            prevState,
+            params: {[s.SHOW_PATHS]:true}
+        }))
+    }
+
+    function onGenerateNew() {
+        const {field,paths} = generateNewField()
+        setState(prevState => createNewState({
+            prevState,
+            params: {
+                [s.SHOW_PATHS]: false,
+                [s.FIELD_DESCRIPTION]: field,
+                [s.PATHS]: paths,
+            }
+        }))
+    }
+
+    function onNext() {
+        if (!state[s.SHOW_PATHS]) {
+            onShowPath()
+        } else {
+            onGenerateNew()
+        }
+    }
+
     return RE.Container.col.top.center({style:{marginTop:'10px'}},{},
         RE.Container.row.center.center({},{style:{marginLeft:'20px'}},
-            RE.Button(
-                {
-                    onClick: () => setState(prevState => createNewState({
-                        prevState,
-                        params: {[s.SHOW_PATHS]:true}
-                    }))
-                },
-                'show path'
-            ),
-            RE.Button(
-                {
-                    onClick: () => {
-                        const {field,paths} = generateNewField()
-                        setState(prevState => createNewState({
-                            prevState,
-                            params: {
-                                [s.SHOW_PATHS]: false,
-                                [s.FIELD_DESCRIPTION]: field,
-                                [s.PATHS]: paths,
-                            }
-                        }))
-                    }
-                },
-                'generate new'
-            ),
+            RE.Button({onClick: onShowPath}, 'show path'),
+            RE.Button({onClick: onGenerateNew}, 'generate new'),
+            RE.Button({onClick: onNext}, 'next'),
         ),
         RE.svg(
             {
