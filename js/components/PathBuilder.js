@@ -45,6 +45,12 @@ const PathBuilder = () => {
     }
 
     function generateNewField() {
+
+        // for (let i = 0; i < 1000; i++) {
+        //     generatePath({width:20,height:15,length:10,numOfFakePaths:3})
+        //     console.log(i)
+        // }
+
         const {field,paths,history} = generatePath({width:20,height:15,length:10,numOfFakePaths:3})
         console.log({field})
         console.log({paths})
@@ -219,7 +225,7 @@ const PathBuilder = () => {
         setState(prevState => createNewState({
             prevState,
             params: {
-                // [s.SHOW_PATHS]: false,
+                [s.SHOW_PATHS]: false,
                 [s.HISTORY]: null
             }
         }))

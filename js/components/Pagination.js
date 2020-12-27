@@ -5,7 +5,7 @@ function Pagination({numOfPages,curPage,onChange}) {
     return RE.ButtonGroup({variant:'contained', size:'small'},
         RE.TextField(
             {
-                variant: 'outlined', label: 'Page',
+                variant: 'outlined', label: 'Version',
                 style: {width: 80},
                 size: 'small',
                 onKeyDown: event => {

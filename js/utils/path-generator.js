@@ -97,15 +97,16 @@ function getPossibleEndPoints({field,x,y,d}) {
     return result
 }
 
-function renderRay({field,start,end,d}) {
+function renderRay({field,start,end}) {
+    const dir = start.x == end.x ? {dx:0,dy:start.y<end.y?1:-1} : {dx:start.x<end.x?1:-1,dy:0}
     let x = start.x
     let y = start.y
     while (x != end.x || y != end.y) {
         if (field[x][y] === EMPTY_CELL) {
             field[x][y] = PATH_CELL
         }
-        x = x + d.dx
-        y = y + d.dy
+        x = x + dir.dx
+        y = y + dir.dy
     }
 }
 
@@ -164,7 +165,7 @@ function generatePath({width,height,length,numOfFakePaths}) {
     }
 
     function extractFieldInfoFromState(state) {
-        const finalField = state[s.FIELD]
+        const finalField = cloneField(state[s.FIELD])
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 if (finalField[x][y] === PATH_CELL || finalField[x][y] === SUB_TARGET_CELL) {
@@ -223,7 +224,7 @@ function generatePath({width,height,length,numOfFakePaths}) {
                 }
             } else {
                 nextStateHolder.set(s.POSSIBLE_ENDPOINTS, determinePossibleEndpoints({
-                    field:prevState[s.FIELD], prevPath:shortestPathForLatestTarget
+                    field:rerenderRays({state:prevState}), prevPath:shortestPathForLatestTarget
                 }))
                 nextStateHolder.set(s.PHASE, p.POSSIBLE_ENDPOINTS_FOUND)
                 nextStateHolder.set(s.ID, stateId++)
@@ -288,7 +289,6 @@ function generatePath({width,height,length,numOfFakePaths}) {
 
         const newField = cloneField(prevField)
         newField[endPoint.x][endPoint.y] = SUB_TARGET_CELL
-        renderRay({field:newField,start:{x:prevEndX,y:prevEndY},end:endPoint,d:dir})
         if (prevFieldShortestPath.length != length) {
             newField[endPoint.x+dir.dx][endPoint.y+dir.dy] = WALL_CELL
         }
@@ -321,9 +321,15 @@ function generatePath({width,height,length,numOfFakePaths}) {
             field:newField,startX,startY,endX:t.x,endY:t.y
         }))
         for (let i = 0; i < prevTargets.length-1; i++) {
+            if (hasNoValue(newShortestPaths[i])) {
+                return false
+            }
             if (oldShortestPaths[i].length != newShortestPaths[i].length) {
                 return false
             }
+        }
+        if (hasNoValue(newShortestPaths.last())) {
+            return false
         }
         return oldShortestPaths.last().length == newShortestPaths.last().length-1
     }
@@ -343,6 +349,29 @@ function generatePath({width,height,length,numOfFakePaths}) {
             state = state[s.PREV_STATE]
         }
         return state
+    }
+
+    function rerenderRays({state}) {
+        const {field,paths} = extractFieldInfoFromState(state)
+        for (let x = 0; x < field.length; x++) {
+            for (let y = 0; y < field[0].length; y++) {
+                const cellType = field[x][y]
+                if (cellType != START_CELL && cellType != WALL_CELL && cellType != TARGET_CELL) {
+                    field[x][y] = EMPTY_CELL
+                }
+            }
+        }
+        for (const path of paths) {
+            for (let i = 0; i < path.length-1; i++) {
+                const start = path[i]
+                const end = path[i+1]
+                renderRay({field,start,end})
+                if (field[end.x][end.y] != TARGET_CELL) {
+                    field[end.x][end.y] = SUB_TARGET_CELL
+                }
+            }
+        }
+        return field
     }
 
     function determinePossibleEndpoints({field,prevPath}) {
