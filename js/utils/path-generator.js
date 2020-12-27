@@ -141,12 +141,8 @@ function generatePath({width,height,length,numOfFakePaths}) {
 
     let stateId = 1
     let state = createObj({[s.PHASE]:p.BEGIN,[s.ID]:stateId++})
-    let cnt = 0
-    while (!(state[s.PHASE] == p.COMPLETED || state[s.PHASE] == p.FAILED || cnt > 50)) {
+    while (!(state[s.PHASE] == p.COMPLETED || state[s.PHASE] == p.FAILED)) {
         state = getNextState(state)
-        // cnt++
-        // console.log({cnt})
-        // console.log({state})
     }
     if (state[s.PHASE] == p.FAILED) {
         throw new Error('state[s.PHASE] == p.FAILED')
