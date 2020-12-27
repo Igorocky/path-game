@@ -148,6 +148,47 @@ function generatePath({width,height,length,numOfFakePaths}) {
         throw new Error('state[s.PHASE] == p.FAILED')
     }
 
+    const result = extractFieldInfoFromState(state)
+    result.history = extractHistoryFromState(state)
+    return result
+
+    function extractHistoryFromState(state) {
+        const result = []
+        while (hasValue(state)) {
+            if (state[s.PHASE] == p.PATH_ELEM_ADDED) {
+                result.unshift(extractFieldInfoFromState(state))
+            }
+            state = state[s.PREV_STATE]
+        }
+        return result
+    }
+
+    function extractFieldInfoFromState(state) {
+        const finalField = state[s.FIELD]
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                if (finalField[x][y] === PATH_CELL || finalField[x][y] === SUB_TARGET_CELL) {
+                    finalField[x][y] = EMPTY_CELL
+                }
+            }
+        }
+        const mainTarget = state[s.TARGETS][0]
+        finalField[mainTarget.x][mainTarget.y] = TARGET_CELL
+
+        return {
+            field: finalField,
+            paths: state[s.TARGETS].map(target =>
+                findShortestPath({
+                    field:finalField,
+                    startX:state[s.START_X],
+                    startY:state[s.START_Y],
+                    endX:target.x,
+                    endY:target.y,
+                })
+            ),
+        }
+    }
+
     function getNextState(prevState) {
         if (prevState[s.PHASE] == p.COMPLETED || prevState[s.PHASE] == p.FAILED) {
             return prevState
@@ -222,6 +263,7 @@ function generatePath({width,height,length,numOfFakePaths}) {
             endY:prevTargets[0].y
         })
         const nextStateHolder = objectHolder(prevState)
+        nextStateHolder.set(s.PREV_STATE, prevState)
         nextStateHolder.set(s.TARGETS, [...prevTargets, shortestPathForMainTarget[prevTargets.length-1]])
         nextStateHolder.set(s.PHASE, p.PATH_ELEM_ADDED)
         nextStateHolder.set(s.ID, stateId++)
@@ -315,29 +357,5 @@ function generatePath({width,height,length,numOfFakePaths}) {
             possibleEndpoints.push(...getPossibleEndPoints({field,x,y,d:dir}))
         }
         return possibleEndpoints
-    }
-
-    const finalField = state[s.FIELD]
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
-            if (finalField[x][y] === PATH_CELL || finalField[x][y] === SUB_TARGET_CELL) {
-                finalField[x][y] = EMPTY_CELL
-            }
-        }
-    }
-    const mainTarget = state[s.TARGETS][0]
-    finalField[mainTarget.x][mainTarget.y] = TARGET_CELL
-
-    return {
-        field: finalField,
-        paths: state[s.TARGETS].map(target =>
-            findShortestPath({
-                field:finalField,
-                startX:state[s.START_X],
-                startY:state[s.START_Y],
-                endX:target.x,
-                endY:target.y,
-            })
-        ),
     }
 }

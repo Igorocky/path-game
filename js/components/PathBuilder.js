@@ -5,6 +5,8 @@ const PathBuilder = () => {
     const s = {
         FIELD_DESCRIPTION: 'FIELD_DESCRIPTION',
         PATHS: 'PATHS',
+        HISTORY: 'HISTORY',
+        CUR_VERSION: 'CUR_VERSION',
         SHOW_PATHS: 'SHOW_PATHS',
     }
 
@@ -12,30 +14,40 @@ const PathBuilder = () => {
 
     function createNewState({prevState, params}) {
         function getParam(name,defValue) {
-            return params?.[name]??prevState?.[name]??defValue
+            const fromParams = params?.[name]
+            if (fromParams !== undefined) {
+                return fromParams
+            }
+            const fromPrevState = prevState?.[name]
+            if (fromPrevState !== undefined) {
+                return fromPrevState
+            }
+            return defValue
         }
 
-        let field = getParam(s.FIELD_DESCRIPTION)
-        let paths = getParam(s.PATHS)
+        let history = getParam(s.HISTORY)
+        let curVersion = getParam(s.CUR_VERSION)
 
-        if (hasNoValue(field)) {
-            const {field:newField,paths:newPaths} = generateNewField()
-            field = newField
-            paths = newPaths
+        if (hasNoValue(history)) {
+            const {history:newHistory} = generateNewField()
+            history = newHistory
+            curVersion = history.length-1
         }
         return createObj({
-            [s.FIELD_DESCRIPTION]: field,
-            [s.PATHS]: paths,
-            [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
-            // [s.SHOW_PATHS]: true,
+            [s.FIELD_DESCRIPTION]: history[curVersion].field,
+            [s.PATHS]: history[curVersion].paths,
+            [s.HISTORY]: history,
+            [s.CUR_VERSION]: curVersion,
+            // [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
+            [s.SHOW_PATHS]: true,
         })
     }
 
     function generateNewField() {
-        const {field,paths} = generatePath({width:20,height:15,length:10,numOfFakePaths:3})
+        const {field,paths,history} = generatePath({width:20,height:15,length:10,numOfFakePaths:3})
         console.log({field})
         console.log({paths})
-        return {field,paths}
+        return {field,paths,history}
     }
 
     const viewWidthPx = 900
@@ -198,13 +210,11 @@ const PathBuilder = () => {
     }
 
     function onGenerateNew() {
-        const {field,paths} = generateNewField()
         setState(prevState => createNewState({
             prevState,
             params: {
                 [s.SHOW_PATHS]: false,
-                [s.FIELD_DESCRIPTION]: field,
-                [s.PATHS]: paths,
+                [s.HISTORY]: null
             }
         }))
     }
@@ -217,9 +227,14 @@ const PathBuilder = () => {
         }
     }
 
-    return RE.Container.col.top.center({style:{marginTop:'10px'}},{},
-        RE.Container.row.center.center({},{style:{marginLeft:'20px'}},
+    return RE.Container.col.top.left({style:{marginTop:'10px'}},{},
+        RE.Container.row.left.center({},{style:{marginLeft:'20px'}},
             RE.Button({onClick: onNext}, 'next'),
+            re(Pagination,{
+                numOfPages:state[s.HISTORY].length,
+                curPage:state[s.CUR_VERSION]+1,
+                onChange: newPage => setState(prevState => createNewState({prevState,params:{[s.CUR_VERSION]:newPage-1}}))
+            })
         ),
         RE.svg(
             {
