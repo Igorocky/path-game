@@ -51,7 +51,7 @@ const PathBuilder = () => {
         //     console.log(i)
         // }
 
-        const {field,paths,history} = generatePath({width:20,height:15,length:10,numOfFakePaths:3})
+        const {field,paths,history} = generatePath({width:20,height:15,length:10,numOfFakePaths:4})
         console.log({field})
         console.log({paths})
         return {field,paths,history}
@@ -158,6 +158,7 @@ const PathBuilder = () => {
             'rgba(255,0,0,0.3)',
             'rgba(0,255,0,0.3)',
             'rgba(0,0,255,0.3)',
+            'rgba(255,169,0,0.6)',
         ]
         for (let i = 1; i < paths.length; i++) {
             result.push(renderPath({
@@ -262,7 +263,7 @@ const PathBuilder = () => {
                 onChange: newPage => setState(prevState => createNewState({prevState,params:{[s.CUR_VERSION]:newPage-1}}))
             })
         ),
-        renderPathInfo(),
+        // renderPathInfo(),
         RE.svg(
             {
                 ...getWidthAndHeightOfSvg({viewBoundaries,viewWidthPx}),

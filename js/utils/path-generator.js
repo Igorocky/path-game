@@ -16,6 +16,21 @@ function isSameNode({x:x1,y:y1,dir:dir1}) {
     return ({x:x2,y:y2,dir:dir2}) => x1==x2 && y1==y2 && (hasNoValue(dir1) || hasNoValue(dir2) || isSameDir(dir1,dir2))
 }
 
+function isSamePath(path1,path2) {
+    if (hasNoValue(path1) || hasNoValue(path2)) {
+        return false
+    }
+    if (path1.length != path2.length) {
+        return false
+    }
+    for (let i = 0; i < path1.length; i++) {
+        if (path1[i].x != path2[i].x || path1[i].y != path2[i].y) {
+            return false
+        }
+    }
+    return true
+}
+
 function findWallOrTarget({field,startX,startY,targetX,targetY,dir}) {
     if (field[startX][startY] === WALL_CELL) {
         throw new Error('field[startX][startY] === WALL_CELL')
@@ -321,17 +336,17 @@ function generatePath({width,height,length,numOfFakePaths}) {
             field:newField,startX,startY,endX:t.x,endY:t.y
         }))
         for (let i = 0; i < prevTargets.length-1; i++) {
-            if (hasNoValue(newShortestPaths[i])) {
-                return false
-            }
-            if (oldShortestPaths[i].length != newShortestPaths[i].length) {
+            if (!isSamePath(oldShortestPaths[i],newShortestPaths[i])) {
                 return false
             }
         }
         if (hasNoValue(newShortestPaths.last())) {
             return false
         }
-        return oldShortestPaths.last().length == newShortestPaths.last().length-1
+        return isSamePath(
+            oldShortestPaths.last(),
+            removeAtIdx(newShortestPaths.last(), newShortestPaths.last().length-1)
+        )
     }
 
     function cloneField(field) {
