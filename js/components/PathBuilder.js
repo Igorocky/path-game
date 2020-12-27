@@ -245,14 +245,26 @@ const PathBuilder = () => {
             RE.FormControlLabel({
                 control:RE.Checkbox({
                     checked: state[s.SHOW_PATHS],
-                    onChange: event => setState(prevState => createNewState({prevState,params:{[s.SHOW_PATHS]:event.target.checked}}))
+                    onChange: event => {
+                        const target = event.target
+                        setState(prevState => createNewState({
+                            prevState,
+                            params: {[s.SHOW_PATHS]: target.checked}
+                        }))
+                    }
                 }),
                 label:'Show paths'
             }),
             RE.FormControlLabel({
                 control:RE.Checkbox({
                     checked: state[s.SHIFT_PATHS],
-                    onChange: event => setState(prevState => createNewState({prevState,params:{[s.SHIFT_PATHS]:event.target.checked}}))
+                    onChange: event => {
+                        const target = event.target
+                        setState(prevState => createNewState({
+                            prevState,
+                            params: {[s.SHIFT_PATHS]: target.checked}
+                        }))
+                    }
                 }),
                 label:'Apply shift'
             }),
