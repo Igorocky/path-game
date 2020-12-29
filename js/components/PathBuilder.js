@@ -9,7 +9,12 @@ const PathBuilder = () => {
         CUR_VERSION: 'CUR_VERSION',
         SHOW_PATHS: 'SHOW_PATHS',
         SHIFT_PATHS: 'SHIFT_PATHS',
+        BALL_COORDS: 'BALL_COORDS',
     }
+
+    useEffect(() => {
+        document.onkeydown = onKeyDown
+    }, [])
 
     const [state, setState] = useState(() => createNewState({}))
 
@@ -41,7 +46,18 @@ const PathBuilder = () => {
             [s.CUR_VERSION]: curVersion,
             [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
             [s.SHIFT_PATHS]: getParam(s.SHIFT_PATHS, false),
+            [s.BALL_COORDS]: getParam(s.BALL_COORDS, getStartCoords({field:history[curVersion].field})),
         })
+    }
+
+    function getStartCoords({field}) {
+        for (let x = 0; x <= field.length; x++) {
+            for (let y = 0; y <= field[0].length; y++) {
+                if (field[x][y] === START_CELL) {
+                    return {x,y}
+                }
+            }
+        }
     }
 
     function generateNewField() {
@@ -115,6 +131,14 @@ const PathBuilder = () => {
                         r:cellSize*0.35,
                         props:{strokeWidth: 0, fill: 'orange'}
                     }))
+                    if (state[s.BALL_COORDS] && (state[s.BALL_COORDS].x != x || state[s.BALL_COORDS].y != y)) {
+                        result.push(svgCircle({
+                            key:`ball-${state[s.BALL_COORDS].x}-${state[s.BALL_COORDS].y}`,
+                            c:new Point(fieldXToSvg(state[s.BALL_COORDS].x), fieldYToSvg(state[s.BALL_COORDS].y)),
+                            r:cellSize*0.35,
+                            props:{strokeWidth: 0, fill: 'green'}
+                        }))
+                    }
                 } else if (cellValue === WALL_CELL) {
                     result.push(renderFilledCell({key:`wall-${x}-${y}`, x, y, color:'blue'}))
                 } else if (cellValue === TARGET_CELL) {
@@ -234,6 +258,34 @@ const PathBuilder = () => {
             onShowPath()
         } else {
             onGenerateNew()
+        }
+    }
+
+    function moveBall({dir}) {
+        setState(prevState => {
+            const field = prevState[s.FIELD_DESCRIPTION]
+            const maxX = field.length-1
+            const maxY = field[0].length-1
+            let ballCoords = prevState[s.BALL_COORDS]
+            while (0 <= ballCoords.x && ballCoords.x <= maxX && 0 <= ballCoords.y && ballCoords.y <= maxY
+                && field[ballCoords.x][ballCoords.y] != TARGET_CELL
+                && 0 <= ballCoords.x+dir.dx && ballCoords.x+dir.dx <= maxX && 0 <= ballCoords.y+dir.dy && ballCoords.y+dir.dy <= maxY
+                && field[ballCoords.x+dir.dx][ballCoords.y+dir.dy] != WALL_CELL) {
+                ballCoords = {x:ballCoords.x+dir.dx, y:ballCoords.y+dir.dy}
+            }
+            return createNewState({prevState, params: {[s.BALL_COORDS]: ballCoords}})
+        })
+    }
+
+    function onKeyDown(event) {
+        if (event.keyCode == DOWN_KEY_CODE) {
+            moveBall({dir:{dx:0,dy:-1}})
+        } else if (event.keyCode == UP_KEY_CODE) {
+            moveBall({dir:{dx:0,dy:1}})
+        } else if (event.keyCode == LEFT_KEY_CODE) {
+            moveBall({dir:{dx:1,dy:0}})
+        } else if (event.keyCode == RIGHT_KEY_CODE) {
+            moveBall({dir:{dx:-1,dy:0}})
         }
     }
 
