@@ -70,7 +70,7 @@ const PathBuilder = () => {
         return generatePath({width:20,height:15,length:10,numOfFakePaths:4,returnHistory:true})
     }
 
-    const viewWidthPx = 900
+    const viewWidthPx = 800
     const background = SVG.rect({key:'background', x:-1000, y:-1000, width:2000, height:2000, fill:'white'})
 
     const cellSize = 10
@@ -131,20 +131,21 @@ const PathBuilder = () => {
                         r:cellSize*0.35,
                         props:{strokeWidth: 0, fill: 'orange'}
                     }))
-                    if (state[s.BALL_COORDS] && (state[s.BALL_COORDS].x != x || state[s.BALL_COORDS].y != y)) {
-                        result.push(svgCircle({
-                            key:`ball-${state[s.BALL_COORDS].x}-${state[s.BALL_COORDS].y}`,
-                            c:new Point(fieldXToSvg(state[s.BALL_COORDS].x), fieldYToSvg(state[s.BALL_COORDS].y)),
-                            r:cellSize*0.35,
-                            props:{strokeWidth: 0, fill: 'green'}
-                        }))
-                    }
                 } else if (cellValue === WALL_CELL) {
                     result.push(renderFilledCell({key:`wall-${x}-${y}`, x, y, color:'blue'}))
                 } else if (cellValue === TARGET_CELL) {
                     result.push(renderFilledCell({key:`target-${x}-${y}`, x, y, color:'black'}))
                 }
             }
+        }
+        const startCoords = getStartCoords({field:state[s.FIELD_DESCRIPTION]})
+        if (state[s.BALL_COORDS] && (state[s.BALL_COORDS].x != startCoords.x || state[s.BALL_COORDS].y != startCoords.y)) {
+            result.push(svgCircle({
+                key:`ball-${state[s.BALL_COORDS].x}-${state[s.BALL_COORDS].y}`,
+                c:new Point(fieldXToSvg(state[s.BALL_COORDS].x), fieldYToSvg(state[s.BALL_COORDS].y)),
+                r:cellSize*0.35,
+                props:{strokeWidth: 0, fill: 'green'}
+            }))
         }
         return result
     }
