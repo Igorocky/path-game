@@ -46,7 +46,7 @@ const PathBuilder = () => {
             [s.CUR_VERSION]: curVersion,
             [s.SHOW_PATHS]: getParam(s.SHOW_PATHS, false),
             [s.SHIFT_PATHS]: getParam(s.SHIFT_PATHS, false),
-            [s.BALL_COORDS]: getParam(s.BALL_COORDS, getStartCoords({field:history[curVersion].field})),
+            [s.BALL_COORDS]: getParam(s.BALL_COORDS)??getStartCoords({field:history[curVersion].field}),
         })
     }
 
@@ -248,7 +248,8 @@ const PathBuilder = () => {
             prevState,
             params: {
                 [s.SHOW_PATHS]: false,
-                [s.HISTORY]: null
+                [s.HISTORY]: null,
+                [s.BALL_COORDS]: null
             }
         }))
     }
@@ -286,6 +287,8 @@ const PathBuilder = () => {
             moveBall({dir:{dx:1,dy:0}})
         } else if (event.keyCode == RIGHT_KEY_CODE) {
             moveBall({dir:{dx:-1,dy:0}})
+        } else if (event.keyCode == ENTER_KEY_CODE) {
+            onGenerateNew()
         }
     }
 
