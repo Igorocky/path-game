@@ -129,7 +129,82 @@ function initField({width,height}) {
     return ints(0,width-1).map(x => ints(0,height-1).map(y=>EMPTY_CELL))
 }
 
-function generatePath({width,height,length,numOfFakePaths}) {
+function getDistinctPart({base,arr,eq}) {
+    let i = 0
+    while (i < base.length && i < arr.length && eq(base[i],arr[i])) {
+        i++
+    }
+    return arr.filter((e,idx) => i <= idx)
+}
+
+function getDistinctPartsOfPaths({paths}) {
+    const result = []
+    for (let i = 1; i < paths.length; i++) {
+        result.push(getDistinctPart({base:paths[0],arr:paths[i],eq:(a,b) => a.x==b.x && a.y==b.y}))
+    }
+    return result
+}
+
+function isComplicatedEnough({distinctPartsOfPaths,mainPathLength,minDistinctLength}) {
+    return distinctPartsOfPaths.every((part,idx) => {
+        // console.log('-------------------------------------------------------')
+        // console.log({part})
+        // console.log({minDistinctLength})
+        // console.log({mainPathLength})
+        // console.log({idx})
+        // console.log("Math.min(minDistinctLength, mainPathLength - idx) = " + JSON.stringify(Math.min(minDistinctLength, mainPathLength - idx)));
+        const res = part.length >= Math.min(minDistinctLength, mainPathLength - idx)
+        // console.log("res = " + JSON.stringify(res));
+        return res
+    })
+}
+
+function generatePath({width,height,length,numOfFakePaths,returnHistory}) {
+    let resultCandidate = generatePathInner({width,height,length,numOfFakePaths,returnHistory})
+    if (!numOfFakePaths) {
+        return resultCandidate
+    } else {
+        const minDistinctLength = 2
+        let results = []
+        results.push({
+            res:resultCandidate,
+            distinctParts: getDistinctPartsOfPaths({paths:resultCandidate.paths})
+        })
+        let isLastComplexEnough = isComplicatedEnough({
+            mainPathLength:results.last().res.paths[0].length,
+            minDistinctLength,
+            distinctPartsOfPaths:results.last().distinctParts
+        })
+        while (!(isLastComplexEnough || results.length >= 10)) {
+            resultCandidate = generatePathInner({width,height,length,numOfFakePaths,returnHistory})
+            results.push({
+                res:resultCandidate,
+                distinctParts: getDistinctPartsOfPaths({paths:resultCandidate.paths})
+            })
+            isLastComplexEnough = isComplicatedEnough({
+                mainPathLength:results.last().res.paths[0].length,
+                minDistinctLength,
+                distinctPartsOfPaths:results.last().distinctParts
+            })
+        }
+        // console.log("results.length = " + JSON.stringify(results.length));
+        // console.log("isLastComplexEnough = " + JSON.stringify(isLastComplexEnough));
+        // console.log("distinctLengths = " + JSON.stringify(results.map(r => r.distinctParts.map(p=>p.length).join(','))));
+        // console.log({results})
+        if (isLastComplexEnough) {
+            return results.last().res
+        } else {
+            results = results.map(r => ({...r,cnt:r.distinctParts.map(dp=>dp.length?1:0).sum()}))
+            const maxCnt = results.map(r => r.cnt).max()
+            results = results.filter(r => r.cnt == maxCnt)
+            results = results.map(r => ({...r,sum:r.distinctParts.map(dp=>dp.length).sum()}))
+            const maxSum = results.map(r => r.sum).max()
+            return results.find(r => r.sum == maxSum).res
+        }
+    }
+}
+
+function generatePathInner({width,height,length,numOfFakePaths,returnHistory}) {
     if (width < 5 || height < 5) {
         throw new Error('width < 5 || height < 5')
     }
@@ -165,7 +240,9 @@ function generatePath({width,height,length,numOfFakePaths}) {
     }
 
     const result = extractFieldInfoFromState(state)
-    result.history = extractHistoryFromState(state)
+    if (returnHistory) {
+        result.history = extractHistoryFromState(state)
+    }
     return result
 
     function extractHistoryFromState(state) {
