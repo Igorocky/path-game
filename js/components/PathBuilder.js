@@ -51,8 +51,8 @@ const PathBuilder = () => {
     }
 
     function getStartCoords({field}) {
-        for (let x = 0; x <= field.length; x++) {
-            for (let y = 0; y <= field[0].length; y++) {
+        for (let x = 0; x < field.length; x++) {
+            for (let y = 0; y < field[0].length; y++) {
                 if (field[x][y] === START_CELL) {
                     return {x,y}
                 }
@@ -139,7 +139,7 @@ const PathBuilder = () => {
             }
         }
         const startCoords = getStartCoords({field:state[s.FIELD_DESCRIPTION]})
-        if (state[s.BALL_COORDS] && (state[s.BALL_COORDS].x != startCoords.x || state[s.BALL_COORDS].y != startCoords.y)) {
+        if (state[s.BALL_COORDS] && startCoords && (state[s.BALL_COORDS].x != startCoords.x || state[s.BALL_COORDS].y != startCoords.y)) {
             result.push(svgCircle({
                 key:`ball-${state[s.BALL_COORDS].x}-${state[s.BALL_COORDS].y}`,
                 c:new Point(fieldXToSvg(state[s.BALL_COORDS].x), fieldYToSvg(state[s.BALL_COORDS].y)),
